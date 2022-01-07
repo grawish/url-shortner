@@ -23,6 +23,7 @@ app.post('/create', async (req, res) => {
         status: "error",
         message: "Invalid Request"
       }))
+      return;
     }
     if (!random) {
       //not random
