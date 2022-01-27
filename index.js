@@ -5,24 +5,24 @@ const shortid = require('shortid');
 const { Urls } = require('./models');
 
 app.use(express.json());
-
-app.get('/', async (req, res) => {
-  res.send(`<pre>${JSON.stringify(req.headers, null, 2)}</pre>`);
-});
+app.use(express.static(__dirname + '/node_modules/url-shortner-react/dist'));
 
 app.post('/create', async (req, res) => {
   const { long_url, short, random } = req.body;
+  console.log(long_url, short, random);
 
   if (validUrl.isUri(long_url)) {
     // url is valid
     let count;
     let short_url;
 
-    if(random===false){
-      res.status(400).send(JSON.stringify({
-        status: "error",
-        message: "Invalid Request"
-      }))
+    if (random === false) {
+      res.status(400).send(
+        JSON.stringify({
+          status: 'error',
+          message: 'Invalid Request',
+        })
+      );
       return;
     }
     if (!random) {
@@ -31,7 +31,9 @@ app.post('/create', async (req, res) => {
         // short is there
         count = await Urls.count({ where: { short_url: short } });
         if (count && !random) {
-          res.status(409).send({ status: 'Error!', message: 'Already Exists!' });
+          res
+            .status(409)
+            .send({ status: 'Error!', message: 'Already Exists!' });
           return;
         }
 
