@@ -7,6 +7,14 @@ const { Urls } = require('./models');
 app.use(express.json());
 app.use(express.static(__dirname + '/node_modules/url-shortner-react/dist'));
 
+var fs = require('fs');
+var http = require('http');
+var https = require('https');
+var privateKey  = fs.readFileSync(process.env.SSL_PRIVATE_KEY, 'utf8');
+var certificate = fs.readFileSync(process.env.SSL_CERTIFICATE, 'utf8');
+
+var credentials = {key: privateKey, cert: certificate};
+
 app.post('/create', async (req, res) => {
   const { long_url, short, random } = req.body;
   console.log(long_url, short, random);
@@ -76,10 +84,6 @@ app.post('/create', async (req, res) => {
 
 app.get('/:id', async (req, res) => {
   const { id } = req.params;
-  if (!shortid.isValid(id)) {
-    res.sendStatus(404);
-    return;
-  }
 
   const variable = await Urls.findOne({
     where: {
@@ -87,10 +91,18 @@ app.get('/:id', async (req, res) => {
     },
   });
 
-  res.status(302).redirect(variable.long_url);
+  if(variable){
+    res.status(302).redirect(variable.long_url);
+  }
+  else{
+    res.sendStatus(404);
+  }
+
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Listening on ${PORT}`);
-});
+var httpServer = http.createServer(app);
+var httpsServer = https.createServer(credentials, app);
+
+httpServer.listen(process.env.PORT || 80);
+httpsServer.listen(process.env.HTTPS_PORT || 443);
+
